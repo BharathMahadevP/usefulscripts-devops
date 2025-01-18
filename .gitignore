@@ -28,3 +28,7 @@ build/
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+
+#test_txt_files
+unread_emails.txt
