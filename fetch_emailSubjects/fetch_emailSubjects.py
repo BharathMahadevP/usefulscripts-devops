@@ -44,7 +44,7 @@ def fetch_unread_emails_primary_tab(username, password):
         # fetch ID of the emails
         email_ids = messages[0].split()
 
-        subject_lines = []
+        email_dict = {}
         for email_id in email_ids:
             # Fetch the email by ID
             res, msg = imap.fetch(email_id, "(BODY.PEEK[])")
@@ -58,10 +58,10 @@ def fetch_unread_emails_primary_tab(username, password):
                     if isinstance(subject, bytes):
                         # If it's a bytes type, decode to str
                         subject = subject.decode(encoding if encoding else "utf-8")
-                    # print("Subject:", subject)
                     cleaned_subject = clean(subject)
-                    subject_lines.append(cleaned_subject)
-        return subject_lines
+                    # Add subject and email ID to the dictionary
+                    email_dict[cleaned_subject] = email_id.decode()
+        return email_dict
 
     except imaplib.IMAP4.error as e:
         print("IMAP error:", e)
@@ -72,12 +72,12 @@ def fetch_unread_emails_primary_tab(username, password):
         imap.logout()
 
 
-def send_message_to_google_chat_space(messages):
+def send_message_to_google_chat_space(email_dict):
 
-    # for message in messages:
+    for subject, id in email_dict.items():
         # Create the payload
         payload = {
-            "text": f"{messages}",
+            "text": f"{subject}",
             # "cards": [
             #     {
             #         "header": {
@@ -107,26 +107,48 @@ def send_message_to_google_chat_space(messages):
             WEBHOOK_URL, headers={"Content-Type": "application/json"}, json=payload
         )
         if response.status_code == 200:
-            print(f"Posted to Google Chat: {messages}")
+            print(f"Posted to Google Chat: {subject}")
+            print("Marking the mail as read...")
+            mark_mail_as_read(id)
         else:
             print(f"Failed to post to Google Chat: {response.text}")
+
+
+def mark_mail_as_read(id):
+    # Connect to the server
+    imap = imaplib.IMAP4_SSL("imap.gmail.com")
+
+    try:
+        # Login to the account
+        imap.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+        # print("Logged in as", EMAIL_USERNAME)
+
+        # Select the "Primary" inbox
+        imap.select(mailbox="INBOX", readonly=False)
+        # print("Selected inbox (Primary)")
+
+        # Mark the email as read
+        imap.store(id, "+FLAGS", "\\Seen")
+        print("Marked email as read")
+
+    except imaplib.IMAP4.error as e:
+        print("Email not marked as read")
+        print("IMAP error:", e)
+    finally:
+        # Close the connection and logout
+        imap.close()
+        imap.logout()
+
 
 # Fetch unread emails from Primary tab
 if __name__ == "__main__":
     if not EMAIL_USERNAME or not EMAIL_PASSWORD:
         print("Please set EMAIL_USERNAME and EMAIL_PASSWORD in your .env file.")
     else:
-        unread_subjects = fetch_unread_emails_primary_tab(
-            EMAIL_USERNAME, EMAIL_PASSWORD
-        )
-        # send_message_to_google_chat_space(unread_subjects[0])
-
+        email_dict = fetch_unread_emails_primary_tab(EMAIL_USERNAME, EMAIL_PASSWORD)
+        send_message_to_google_chat_space(email_dict)
         # Open a file in write mode
         with open("unread_emails.txt", "w") as file:
-            i = 1
-            for subject in unread_subjects:
+            for subject, id in email_dict.items():
                 # Write to file
-                file.write(str(i) + ": " + subject + "\n")
-                i += 1
-
-        # print("\nUnread email subjects have been saved to 'unread_emails.txt'")
+                file.write(subject + "=" + id + "\n")
