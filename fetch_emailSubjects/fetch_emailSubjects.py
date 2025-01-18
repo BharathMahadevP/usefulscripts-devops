@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import re
 import requests
+import time
 
 load_dotenv()
 
@@ -78,28 +79,28 @@ def send_message_to_google_chat_space(email_dict):
         # Create the payload
         payload = {
             "text": f"{subject}",
-            # "cards": [
-            #     {
-            #         "header": {
-            #             "title": "subject",
-            #             "subtitle": "Screenshot of email body",
-            #         },
-            #         "sections": [
-            #             {
-            #                 "widgets": [
-            #                     {
-            #                         # "image": {
-            #                         #     "imageUrl": f"data:image/png;base64,{encoded_image}",
-            #                         #     "onClick": {
-            #                         #         "openLink": {"url": "https://chat.google.com"},
-            #                         #     },
-            #                         # }
-            #                     }
-            #                 ]
-            #             }
-            #         ],
-            #     }
-            # ],
+        #     "cards": [
+        #         {
+        #             "header": {
+        #                 "title": "subject",
+        #                 "subtitle": "Screenshot of email body",
+        #             },
+        #             "sections": [
+        #                 {
+        #                     "widgets": [
+        #                         {
+        #                             "image": {
+        #                                 "imageUrl": f"data:image/png;base64,{encoded_image}",
+        #                                 "onClick": {
+        #                                     "openLink": {"url": "https://chat.google.com"},
+        #                                 },
+        #                             }
+        #                         }
+        #                     ]
+        #                 }
+        #             ],
+        #         }
+        #     ],
         }
 
         # Send the payload to the Google Chat webhook
@@ -112,6 +113,7 @@ def send_message_to_google_chat_space(email_dict):
             mark_mail_as_read(id)
         else:
             print(f"Failed to post to Google Chat: {response.text}")
+            failed_mail[subject] = id
 
 
 def mark_mail_as_read(id):
@@ -146,7 +148,12 @@ if __name__ == "__main__":
         print("Please set EMAIL_USERNAME and EMAIL_PASSWORD in your .env file.")
     else:
         email_dict = fetch_unread_emails_primary_tab(EMAIL_USERNAME, EMAIL_PASSWORD)
-        send_message_to_google_chat_space(email_dict)
+        failed_mail = send_message_to_google_chat_space(email_dict)
+        if failed_mail:
+            print("Waiting for 1 minute before retrying to send failed emails...")
+            time.sleep(60) # wait for 1 minute
+            print("Retrying...")
+            send_message_to_google_chat_space(failed_mail)
         # Open a file in write mode
         with open("unread_emails.txt", "w") as file:
             for subject, id in email_dict.items():
