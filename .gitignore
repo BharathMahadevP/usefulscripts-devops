@@ -32,3 +32,6 @@ Thumbs.db
 
 #test_txt_files
 unread_emails.txt
+
+#temp_files
+temp.*
