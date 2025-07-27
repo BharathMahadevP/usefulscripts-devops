@@ -1,0 +1,16 @@
+#rename this file to '.env' or create a new file with name .env and the following values
+
+#for gitlab authentication (PAT permission:Grants complete read/write access to the API, including all groups and projects, the container registry, the dependency proxy, and the package registry.)
+API_TOKEN = ""
+GITLAB_API_URL= ""
+
+#for azure authentication
+AZURE_CLIENT_ID = ''
+AZURE_CLIENT_SECRET = ''
+AZURE_TENENT_ID = ''
+
+AWS_ACCESS_KEY_ID_PRIMARY=
+AWS_SECRET_ACCESS_KEY_PRIMARY=
+
+AWS_ACCESS_KEY_ID_SECONDARY=
+AWS_SECRET_ACCESS_KEY_SECONDARY=
