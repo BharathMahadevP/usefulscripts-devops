@@ -35,3 +35,12 @@ unread_emails.txt
 
 #temp_files
 temp.*
+
+
+.env
+.vscode
+__pycache__
+*.pyc
+users.txt
+*.xlsx
+bkp
