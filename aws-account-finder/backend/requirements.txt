@@ -1,0 +1,6 @@
+fastapi[all]
+uvicorn 
+python-dotenv
+boto3
+pydantic
+ipaddress
