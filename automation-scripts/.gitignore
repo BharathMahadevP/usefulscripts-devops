@@ -1,7 +1,0 @@
-.env
-.vscode
-__pycache__
-*.pyc
-users.txt
-*.xlsx
-bkp
